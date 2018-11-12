@@ -347,6 +347,9 @@ module WxPay
 
     ORDER_QUERY_REQUIRED_FIELDS = [:out_trade_no]
     def self.order_query(params, options = {})
+      sign_type = options.delete(:sign_type)
+      sign_type ||= WxPay::Sign::SIGN_TYPE_MD5
+
       params = {
         appid: options.delete(:appid) || WxPay.appid,
         mch_id: options.delete(:mch_id) || WxPay.mch_id,
@@ -354,8 +357,7 @@ module WxPay
         nonce_str: SecureRandom.uuid.tr('-', '')
       }.merge(params)
 
-
-      r = WxPay::Result.new(Hash.from_xml(invoke_remote("/pay/orderquery", make_payload(params), options)))
+      r = WxPay::Result.new(Hash.from_xml(invoke_remote("/pay/orderquery", make_payload(params, sign_type), options)))
       check_required_options(params, ORDER_QUERY_REQUIRED_FIELDS)
 
       yield r if block_given?
